@@ -29,7 +29,10 @@ window.addEventListener("unhandledrejection", e => {
     <button id="print-view" class="raw-toggle" style="margin-left:auto" type="button">[PRINT VIEW]</button>
   </header>
 
-  <div id="question" aria-hidden="true">WHAT WILL THE SERVER STORE?</div>
+  <div id="question-wrap">
+    <div id="question" aria-hidden="true">WHAT WILL THE SERVER STORE?</div>
+    <div id="question-rule" aria-hidden="true"></div>
+  </div>
 
   <main id="bench">
     <!-- ═══════════════════════ ① INPUT ═══════════════════════ -->
@@ -81,12 +84,28 @@ window.addEventListener("unhandledrejection", e => {
       </div>
     </section>
 
-    <!-- ═══════════════════════ ② TRANSFORMATION ══════════════ -->
+    <!-- ═══════════════════════ ② TRANSFORMATION — PROTOCOL MACHINE ══════════════ -->
     <section class="zone" id="zone-transform" aria-label="Transformation">
+      <div class="bed-plate" aria-hidden="true">
+        <div class="bed-plate-top">
+          <span class="bed-plate-title">[TRANSFORMATION BED]</span>
+          <span class="bed-plate-flow">RAW → SWEEP → CANONICAL → CHECKS → VERDICT</span>
+        </div>
+        <div class="bed-plate-rule"></div>
+        <div class="bed-conduit" aria-hidden="true">
+          <span class="conduit-node" data-label="RAW"></span>
+          <span class="conduit-node" data-label="SWEEP"></span>
+          <span class="conduit-node" data-label="CANONICAL"></span>
+          <span class="conduit-node" data-label="CHECKS"></span>
+          <span class="conduit-node dormant" data-label="VERDICT"></span>
+        </div>
+      </div>
+
       <div class="panel-block corner-ticks" id="sweep-block">
         <div class="panel-title">[SWEEP] <span class="count" id="sweep-count">Δ0</span>
           <span style="font-weight:400;letter-spacing:0">what the server replaces before storing</span></div>
         <div id="sweep-field" aria-live="polite"></div>
+        <div class="panel-ruler" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       </div>
 
       <div class="panel-block corner-ticks" id="canonical-block">
@@ -103,12 +122,22 @@ window.addEventListener("unhandledrejection", e => {
         <div class="panel-title" style="color:var(--warn)">[T2 · OBSERVATION] windowed live facts — never promises</div>
         <div id="t2-note" style="border:1px dashed var(--warn); padding:8px 12px; font-size:12px; color:var(--ink-dim)"></div>
       </div>
+
+      <div class="bed-status" aria-hidden="true">
+        <span class="bed-status-label">STANDBY — AWAITING OPERATOR</span>
+        <span class="bed-status-ticks">┤ ┤ ┤</span>
+      </div>
     </section>
 
     <!-- ═══════════════════════ ③ VERDICT ═════════════════════ -->
     <section class="zone" id="zone-verdict" aria-label="Verdict">
       <div id="lamp-box" class="housing">
-        <div id="lamp"><span class="word" id="lamp-word">—</span></div>
+        <div class="lamp-housing-ticks" aria-hidden="true"></div>
+        <div id="lamp">
+          <div class="lamp-ring" aria-hidden="true"></div>
+          <div class="lamp-aperture" aria-hidden="true"></div>
+          <span class="word" id="lamp-word">—</span>
+        </div>
         <div id="lamp-caption">awaiting input</div>
         <div id="runs-counter">run 0</div>
       </div>

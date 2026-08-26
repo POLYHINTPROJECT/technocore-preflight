@@ -26,6 +26,8 @@ const el = {
   stCanonical: $("st-canonical"), stUrl: $("st-url"),
   rEngine: $("r-engine"),
   t2Block: $("t2-block"), t2Note: $("t2-note"),
+  bedStatus: document.querySelector(".bed-status"),
+  conduitNodes: [...document.querySelectorAll(".conduit-node")],
 };
 el.rEngine.textContent = "v" + ENGINE_VERSION;
 
@@ -96,8 +98,25 @@ function liveValidate() {
 function renderSweepField(rawText, result) {
   el.sweepField.innerHTML = "";
   if (!rawText) {
-    el.sweepField.innerHTML =
-      '<span style="color:var(--ink-dim);font-size:11px">awaiting draft…</span>';
+    // Dormant machine topology: empty slots, brackets, ruler already in CSS,
+    // no fake values — just the structure waiting for an operator.
+    const d = document.createElement("div");
+    d.className = "sweep-dormant";
+    d.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 14; i++) {
+      const s = document.createElement("span");
+      s.className = "slot" + (i % 5 === 4 ? " wide" : "");
+      d.appendChild(s);
+    }
+    el.sweepField.appendChild(d);
+    const brackets = document.createElement("div");
+    brackets.className = "sweep-brackets";
+    brackets.setAttribute("aria-hidden", "true");
+    el.sweepField.appendChild(brackets);
+    const label = document.createElement("span");
+    label.style.cssText = "position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:10px;letter-spacing:.14em;color:var(--ink-dim);opacity:.45;pointer-events:none";
+    label.textContent = "— AWAITING DRAFT —";
+    el.sweepField.appendChild(label);
     return;
   }
   const changedAt = new Map((result?.changes ?? []).map(([i, u]) => [i, u]));
@@ -130,7 +149,33 @@ function renderSweepField(rawText, result) {
 function renderRibbon(room, nonce, stored) {
   el.ribbon.innerHTML = "";
   if (stored === null || stored === undefined || !room) {
-    el.ribbon.innerHTML = '<span style="color:var(--ink-dim);font-size:11px">—</span>';
+    // Dormant segmented slots — structure without values, no fake data.
+    const d = document.createElement("div");
+    d.className = "ribbon-dormant";
+    d.setAttribute("aria-hidden", "true");
+    const segs = [
+      ["ROOM", "—"], ["NONCE", "—"], ["STORED", "—"],
+    ];
+    for (const [label, val] of segs) {
+      const s = document.createElement("span");
+      s.className = "seg";
+      const lab = document.createElement("span");
+      lab.className = "label";
+      lab.textContent = label;
+      const v = document.createElement("span");
+      v.className = "value";
+      v.textContent = val;
+      const bc = document.createElement("span");
+      bc.className = "bcount";
+      bc.textContent = "—B";
+      s.append(lab, v, bc);
+      d.appendChild(s);
+    }
+    const sha = document.createElement("span");
+    sha.style.cssText = "font-size:10px;letter-spacing:.08em;color:var(--ink-dim);opacity:.5;padding:4px 6px;align-self:center";
+    sha.textContent = "sha256 —";
+    d.appendChild(sha);
+    el.ribbon.appendChild(d);
     return;
   }
   const nStr = String(parseInt(nonce || "0", 10));
@@ -292,6 +337,19 @@ async function computeAll(interactive = false) {
   resetChecks();
   markCheck("sweep", swept ? (swept.change_count ? "warn" : "ok") : "rej");
 
+  // bed topology — dormant vs operational, no fake values
+  if (el.bedStatus) el.bedStatus.style.display = params.text ? "none" : "flex";
+  if (el.conduitNodes.length >= 5) {
+    const hasRoom = !!params.room;
+    const nonceOk = /^\d{1,19}$/.test(params.nonce);
+    const hasCanonical = !!(swept && hasRoom && nonceOk);
+    el.conduitNodes[0].classList.toggle("dormant", !params.text);
+    el.conduitNodes[1].classList.toggle("dormant", !params.text);
+    el.conduitNodes[2].classList.toggle("dormant", !hasCanonical);
+    el.conduitNodes[3].classList.toggle("dormant", true); // checks → verdict, active after verdict
+    el.conduitNodes[4].classList.toggle("dormant", true);
+  }
+
   // ---- pipeline (with real signature verification when a sig is present)
   const struct = buildStruct(params);
   let pfr = null;
@@ -336,6 +394,12 @@ function applyVerdict(pfr, isIdenticalRun) {
   runCount++;
   el.runsCounter.textContent =
     `run ${runCount}` + (isIdenticalRun ? " · identical ✓" : "");
+  // conduit verdict stage — idle is dormant, any verdict powers the path
+  if (el.conduitNodes.length >= 5) {
+    const hasVerdict = !!pfr;
+    el.conduitNodes[3].classList.toggle("dormant", !hasVerdict);
+    el.conduitNodes[4].classList.toggle("dormant", !hasVerdict);
+  }
   if (!pfr) {
     el.lamp.className = ""; el.lampWord.textContent = "—";
     el.lampCaption.textContent = "fill the wells to preflight a write";
