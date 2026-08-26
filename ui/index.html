@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>J1 PREFLIGHT — what will the server store?</title>
+<script>
+/* QA trap: surface any uncaught error where --dump-dom can see it. */
+window.addEventListener("error", e => {
+  document.title = "JS-ERROR: " + e.message + " @" + (e.filename||"").split("/").pop() + ":" + e.lineno;
+});
+window.addEventListener("unhandledrejection", e => {
+  document.title = "REJECTION: " + (e.reason && e.reason.message || e.reason);
+});
+</script>
+<link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <header id="rail">
+    <span class="wordmark">J1 PREFLIGHT</span>
+    <span class="sep">▎</span>
+    <span>ENGINE <span id="r-engine">v?</span></span>
+    <span class="sep">▎</span>
+    <span>MODEL pinned@2026-08-26</span>
+    <span class="sep">▎</span>
+    <span><span class="liveness-dot" aria-hidden="true"></span>SERVICE mb-p-preflight-11b17958c4064c71</span>
+    <span class="sep">▎</span>
+    <span>T1 DETERMINISTIC · T2 OBSERVATIONAL</span>
+    <button id="print-view" class="raw-toggle" style="margin-left:auto" type="button">[PRINT VIEW]</button>
+  </header>
+
+  <div id="question" aria-hidden="true">WHAT WILL THE SERVER STORE?</div>
+
+  <main id="bench">
+    <!-- ═══════════════════════ ① INPUT ═══════════════════════ -->
+    <section class="zone" id="zone-input" aria-label="Input">
+      <div class="housing chamfer-tr">
+        <span class="zlabel" id="input-label">[INPUT · PREVIEW]</span>
+        <div class="op-tabs" role="tablist" aria-label="operation">
+          <button class="op-tab" role="tab" data-op="preview" aria-selected="true">preview</button>
+          <button class="op-tab" role="tab" data-op="verify" aria-selected="false">verify</button>
+          <button class="op-tab" role="tab" data-op="audit-did-note" aria-selected="false">audit-did-note</button>
+        </div>
+
+        <form id="intake" autocomplete="off">
+          <div class="field-row">
+            <div class="field-head"><label class="field-label" for="f-room">room</label><span class="field-led" id="led-room"></span></div>
+            <div class="well"><input id="f-room" name="room" spellcheck="false" placeholder="lobby"></div>
+            <div class="field-err" id="err-room"></div>
+          </div>
+          <div class="field-row">
+            <div class="field-head"><label class="field-label" for="f-nonce">nonce</label><span class="field-led" id="led-nonce"></span></div>
+            <div class="well"><input id="f-nonce" name="nonce" inputmode="numeric" spellcheck="false" placeholder="1"></div>
+            <div class="field-err" id="err-nonce"></div>
+          </div>
+          <div class="field-row">
+            <div class="field-head"><label class="field-label" for="f-did">did (author)</label><span class="field-led" id="led-did"></span></div>
+            <div class="well"><input id="f-did" name="did" spellcheck="false" placeholder="did:key:z6Mk…"></div>
+            <div class="field-err" id="err-did"></div>
+          </div>
+          <div class="field-row">
+            <div class="field-head"><label class="field-label" for="f-text">text — the write you are considering</label><span class="field-led" id="led-text"></span></div>
+            <div class="well"><textarea id="f-text" name="text" spellcheck="false" placeholder="draft…"></textarea></div>
+            <div class="field-err" id="err-text"></div>
+          </div>
+          <div class="field-row" id="row-sig">
+            <div class="field-head"><label class="field-label" for="f-sig">sig — optional, verifies too</label><span class="field-led" id="led-sig"></span></div>
+            <div class="well"><input id="f-sig" name="sig" spellcheck="false" placeholder="86 chars base64url…"></div>
+            <div class="field-err" id="err-sig"></div>
+          </div>
+          <button type="submit" class="keycap" id="run-btn">RUN PREFLIGHT ⌘↩</button>
+        </form>
+
+        <button type="button" class="raw-toggle" id="raw-mode">[PASTE RAW PFQ INSTEAD]</button>
+        <div class="examples" id="examples">
+          <button type="button" class="example-chip" data-ex="valid">valid</button>
+          <button type="button" class="example-chip" data-ex="sweep-trap">sweep-trap</button>
+          <button type="button" class="example-chip" data-ex="bad-sig">bad-signature</button>
+          <button type="button" class="example-chip" data-ex="long-url">long-url</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════ ② TRANSFORMATION ══════════════ -->
+    <section class="zone" id="zone-transform" aria-label="Transformation">
+      <div class="panel-block corner-ticks" id="sweep-block">
+        <div class="panel-title">[SWEEP] <span class="count" id="sweep-count">Δ0</span>
+          <span style="font-weight:400;letter-spacing:0">what the server replaces before storing</span></div>
+        <div id="sweep-field" aria-live="polite"></div>
+      </div>
+
+      <div class="panel-block corner-ticks" id="canonical-block">
+        <div class="panel-title">[CANONICAL STRING] <span style="font-weight:400;letter-spacing:0">exactly what your signature must cover</span></div>
+        <div id="ribbon"></div>
+      </div>
+
+      <div class="panel-block" id="checks-block">
+        <div class="panel-title">[CHECKS] <span style="font-weight:400;letter-spacing:0" id="checks-progress">idle</span></div>
+        <div id="check-rail" aria-live="polite"></div>
+      </div>
+
+      <div class="panel-block" id="t2-block" hidden>
+        <div class="panel-title" style="color:var(--warn)">[T2 · OBSERVATION] windowed live facts — never promises</div>
+        <div id="t2-note" style="border:1px dashed var(--warn); padding:8px 12px; font-size:12px; color:var(--ink-dim)"></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════ ③ VERDICT ═════════════════════ -->
+    <section class="zone" id="zone-verdict" aria-label="Verdict">
+      <div id="lamp-box" class="housing">
+        <div id="lamp"><span class="word" id="lamp-word">—</span></div>
+        <div id="lamp-caption">awaiting input</div>
+        <div id="runs-counter">run 0</div>
+      </div>
+
+      <div id="ledger">
+        <span class="zlabel">[FINDINGS]</span>
+        <ul id="ledger-list" aria-live="polite"></ul>
+      </div>
+
+      <div>
+        <div class="panel-title">[WIRE PREVIEW]</div>
+        <div id="wire-preview">—</div>
+        <button type="button" class="copy-btn" id="copy-pfr">COPY PFR LINE</button>
+      </div>
+    </section>
+  </main>
+
+  <footer id="status-strip" aria-live="off">
+    <span>in <b id="st-in">0</b>/4096</span>
+    <span>stored <b id="st-stored">—</b></span>
+    <span>sweep Δ<b id="st-delta">0</b></span>
+    <span>canonical <b id="st-canonical">—</b></span>
+    <span>url ~<b id="st-url">—</b>/16384</span>
+    <span style="margin-left:auto">deterministic · same input → same verdict</span>
+  </footer>
+
+  <div id="toast" role="status">[COPIED]</div>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
