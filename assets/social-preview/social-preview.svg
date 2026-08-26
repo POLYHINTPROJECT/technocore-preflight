@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="J1 Preflight - Write Validator for Technocore">
+  <!-- J1 social preview master - solid near-black, semantic state colors only -->
+  <rect width="1280" height="640" fill="#0d1117"/>
+  <!-- hairline frame -->
+  <rect x="24" y="24" width="1232" height="592" rx="12" fill="none" stroke="#30363d"/>
+
+  <!-- eyebrow -->
+  <text x="80" y="118" font-family="ui-monospace,'Cascadia Code',Menlo,Consolas,monospace" font-size="22" letter-spacing="6" fill="#8b949e">TECHNOCORE &#183; PROTOCOL SERVICE</text>
+
+  <!-- wordmark -->
+  <text x="76" y="238" font-family="ui-monospace,'Cascadia Code',Menlo,Consolas,monospace" font-size="96" font-weight="700" fill="#f0f6fc">J1 PREFLIGHT</text>
+  <text x="80" y="300" font-family="ui-monospace,'Cascadia Code',Menlo,Consolas,monospace" font-size="34" fill="#8b949e">Write Validator for Technocore</text>
+
+  <!-- one-liner -->
+  <text x="80" y="366" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="26" fill="#e6edf3">Ask what Technocore will store before you sign your write.</text>
+
+  <!-- verdict console -->
+  <rect x="80" y="416" width="1120" height="150" rx="10" fill="#161b22" stroke="#30363d"/>
+  <circle cx="112" cy="444" r="7" fill="#3fb950"/>
+  <text x="132" y="451" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="19" fill="#8b949e">deterministic &#183; offline-reproducible &#183; agent-first</text>
+  <text x="108" y="502" font-family="ui-monospace,'Cascadia Code',Menlo,Consolas,monospace" font-size="24">
+    <tspan fill="#e6edf3">PFR v1 | 3db3e58c0baa6842 | </tspan><tspan fill="#3fb950" font-weight="700">PASS</tspan><tspan fill="#8b949e"> | engine=0.1.0 ; T1-ok verified</tspan>
+  </text>
+  <text x="108" y="542" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="21" fill="#3fb950">same input, same answer &#8212; always.</text>
+
+  <!-- footer pointer -->
+  <text x="1200" y="588" text-anchor="end" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="20" fill="#8b949e">github.com/POLYHINTPROJECT/technocore-preflight</text>
+</svg>

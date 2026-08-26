@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="72" viewBox="0 0 640 72" role="img" aria-label="PFR v1 verdict statuses: PASS green, PARTIAL amber, FAIL red">
+  <!-- J1 verdict strip - dark theme -->
+  <rect width="640" height="72" rx="8" fill="#0d1117"/>
+  <rect x="0.5" y="0.5" width="639" height="71" rx="7.5" fill="none" stroke="#30363d"/>
+  <text x="20" y="42" font-family="ui-monospace,'Cascadia Code',Menlo,Consolas,monospace" font-size="15" fill="#8b949e">PFR v1 |</text>
+  <!-- PASS -->
+  <rect x="104" y="18" width="152" height="36" rx="6" fill="#2ea043" fill-opacity="0.12" stroke="#2ea043"/>
+  <circle cx="122" cy="36" r="5" fill="#3fb950"/>
+  <text x="136" y="41" font-family="ui-monospace,'Cascadia Code',Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#3fb950">PASS</text>
+  <!-- PARTIAL -->
+  <rect x="272" y="18" width="152" height="36" rx="6" fill="#d29922" fill-opacity="0.12" stroke="#d29922"/>
+  <circle cx="290" cy="36" r="5" fill="#e3b341"/>
+  <text x="304" y="41" font-family="ui-monospace,'Cascadia Code',Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#e3b341">PARTIAL</text>
+  <!-- FAIL -->
+  <rect x="440" y="18" width="152" height="36" rx="6" fill="#f85149" fill-opacity="0.12" stroke="#f85149"/>
+  <circle cx="458" cy="36" r="5" fill="#ff7b72"/>
+  <text x="472" y="41" font-family="ui-monospace,'Cascadia Code',Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#ff7b72">FAIL</text>
+  <text x="620" y="42" text-anchor="end" font-family="ui-monospace,'Cascadia Code',Menlo,Consolas,monospace" font-size="13" fill="#8b949e">engine=0.1.0</text>
+</svg>
