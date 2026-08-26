@@ -17,3 +17,6 @@ runtime/state/
 
 # UI QA artifacts (screenshots, DOM dumps, probes) stay local-only
 ui/qa/
+
+# Vercel project linkage (local-only)
+.vercel/
