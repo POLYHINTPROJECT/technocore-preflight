@@ -28,6 +28,9 @@ const el = {
   t2Block: $("t2-block"), t2Note: $("t2-note"),
   bedStatus: document.querySelector(".bed-status"),
   conduitNodes: [...document.querySelectorAll(".conduit-node")],
+  bench: document.getElementById("bench"),
+  zoneTransform: document.getElementById("zone-transform"),
+  housing: document.querySelector("#zone-input .housing"),
 };
 el.rEngine.textContent = "v" + ENGINE_VERSION;
 
@@ -81,10 +84,10 @@ function setFieldState(input, errId, ledId, verdict) {
 }
 
 function liveValidate() {
-  setFieldState(el.room, "err-room", "led-room",
-    el.room.value ? validateRoom(el.room.value.trim()) : null);
-  setFieldState(el.nonce, "err-nonce", "led-nonce",
-    el.nonce.value ? validateNonce(el.nonce.value.trim()) : null);
+  const vRoom = el.room.value ? validateRoom(el.room.value.trim()) : null;
+  const vNonce = el.nonce.value ? validateNonce(el.nonce.value.trim()) : null;
+  setFieldState(el.room, "err-room", "led-room", vRoom);
+  setFieldState(el.nonce, "err-nonce", "led-nonce", vNonce);
   let vDid = null;
   if (el.did.value.trim()) {
     try { parseDid(el.did.value.trim());
@@ -92,6 +95,17 @@ function liveValidate() {
     catch (e) { vDid = { ok: false, code: "", detail: e.message }; }
   }
   setFieldState(el.did, "err-did", "led-did", vDid);
+  // restrained fault on conduit: invalid → fault tint on corresponding node
+  if (el.conduitNodes.length >= 5) {
+    const roomFault = vRoom && !vRoom.ok;
+    const nonceFault = vNonce && !vNonce.ok;
+    const didFault = vDid && !vDid.ok;
+    const hasFault = roomFault || nonceFault || didFault;
+    // CANONICAL node (idx 2) shows fault if any of room/nonce/did invalid
+    el.conduitNodes[2].classList.toggle("fault", !!hasFault);
+    // clear fault when field empty (not invalid)
+    if (!el.room.value && !el.nonce.value && !el.did.value) el.conduitNodes[2].classList.remove("fault");
+  }
 }
 
 /* ------------------------------------------------------ sweep field */
@@ -132,6 +146,7 @@ function renderSweepField(rawText, result) {
     } else {
       tile.textContent = ch === " " ? "·" : ch;
       if (ch === " ") tile.classList.add("space");
+      else tile.classList.add("glyph--active");
     }
     frag.appendChild(tile);
     idx++;
@@ -219,7 +234,13 @@ function resetChecks() {
 
 function markCheck(name, cls) {
   const chip = $("chk-" + name);
-  if (chip) chip.classList.add("on-" + cls);
+  if (chip) {
+    chip.classList.add("on-" + cls);
+    if (!reducedMotion) {
+      chip.classList.add("check--pulse");
+      setTimeout(() => chip.classList.remove("check--pulse"), 260);
+    }
+  }
 }
 
 /* ------------------------------------------------------------- ledger */
@@ -337,6 +358,17 @@ async function computeAll(interactive = false) {
   resetChecks();
   markCheck("sweep", swept ? (swept.change_count ? "warn" : "ok") : "rej");
 
+  // bench active pulse — shows information traveling INPUT→SWEEP→CANONICAL
+  el.bench?.classList.add("bench--active");
+  el.zoneTransform?.classList.add("bench--active");
+  const conduitEl = document.querySelector(".bed-conduit");
+  conduitEl?.classList.add("bench--active");
+  setTimeout(() => {
+    el.bench?.classList.remove("bench--active");
+    el.zoneTransform?.classList.remove("bench--active");
+    conduitEl?.classList.remove("bench--active");
+  }, reducedMotion ? 0 : 700);
+
   // bed topology — dormant vs operational, no fake values
   if (el.bedStatus) el.bedStatus.style.display = params.text ? "none" : "flex";
   if (el.conduitNodes.length >= 5) {
@@ -344,10 +376,15 @@ async function computeAll(interactive = false) {
     const nonceOk = /^\d{1,19}$/.test(params.nonce);
     const hasCanonical = !!(swept && hasRoom && nonceOk);
     el.conduitNodes[0].classList.toggle("dormant", !params.text);
+    el.conduitNodes[0].classList.toggle("active", !!params.text);
     el.conduitNodes[1].classList.toggle("dormant", !params.text);
+    el.conduitNodes[1].classList.toggle("active", !!params.text);
     el.conduitNodes[2].classList.toggle("dormant", !hasCanonical);
+    el.conduitNodes[2].classList.toggle("active", !!hasCanonical);
     el.conduitNodes[3].classList.toggle("dormant", true); // checks → verdict, active after verdict
     el.conduitNodes[4].classList.toggle("dormant", true);
+    el.conduitNodes[3].classList.remove("active");
+    el.conduitNodes[4].classList.remove("active");
   }
 
   // ---- pipeline (with real signature verification when a sig is present)
@@ -399,6 +436,8 @@ function applyVerdict(pfr, isIdenticalRun) {
     const hasVerdict = !!pfr;
     el.conduitNodes[3].classList.toggle("dormant", !hasVerdict);
     el.conduitNodes[4].classList.toggle("dormant", !hasVerdict);
+    el.conduitNodes[3].classList.toggle("active", !!hasVerdict);
+    el.conduitNodes[4].classList.toggle("active", !!hasVerdict);
   }
   if (!pfr) {
     el.lamp.className = ""; el.lampWord.textContent = "—";
@@ -474,6 +513,33 @@ const debounced = (() => { let h; return () => {
 ["room", "nonce", "did"].forEach(k => el[k].addEventListener("input", () => { liveValidate(); debounced(); }));
 el.text.addEventListener("input", debounced);
 el.sig.addEventListener("input", debounced);
+
+/* focus wake — instrument responds to operator presence */
+function setFocusWake(active, field) {
+  el.bench?.classList.toggle("bench--focus", active);
+  el.zoneTransform?.classList.toggle("bench--focus", active);
+  el.housing?.classList.toggle("housing--focus", active);
+  // conduit node corresponds to field: room/nonce/did → CANONICAL, text → SWEEP, sig → CHECKS
+  if (el.conduitNodes.length >= 5) {
+    const map = { room: 2, nonce: 2, did: 2, text: 1, sig: 3 };
+    const idx = map[field];
+    if (idx !== undefined) {
+      el.conduitNodes.forEach((n,i) => n.classList.toggle("armed", active && i===idx));
+    }
+    if (!active) el.conduitNodes.forEach(n => n.classList.remove("armed"));
+  }
+  // panel focus
+  const sweepBlock = document.getElementById("sweep-block");
+  const canonicalBlock = document.getElementById("canonical-block");
+  if (sweepBlock) sweepBlock.classList.toggle("panel-block--focus", active && field==="text");
+  if (canonicalBlock) canonicalBlock.classList.toggle("panel-block--focus", active && ["room","nonce","did"].includes(field));
+}
+["room","nonce","did","text","sig"].forEach(k => {
+  const inp = el[k];
+  if (!inp) return;
+  inp.addEventListener("focus", () => setFocusWake(true, k));
+  inp.addEventListener("blur",  () => setFocusWake(false, k));
+});
 
 document.querySelectorAll(".op-tab").forEach(t => t.addEventListener("click", () => {
   document.querySelectorAll(".op-tab").forEach(x => x.setAttribute("aria-selected", "false"));
