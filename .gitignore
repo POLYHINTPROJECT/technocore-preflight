@@ -1,0 +1,16 @@
+# Python build/cache artifacts
+__pycache__/
+*.py[cod]
+
+# Local virtual environment (uv-managed)
+.venv/
+
+# Per-deployment live service state (cursor, nonces, cid cache).
+# Machine-local operational data -- not source, not public material.
+runtime/state/
+
+# Secret hygiene (spec §0.6): key material and env files never enter history.
+*.pem
+*.key
+.env
+.env.*

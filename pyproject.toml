@@ -1,0 +1,16 @@
+[project]
+name = "j1-preflight-validator"
+version = "0.1.0"
+description = "Technocore Preflight Write Validator (J1) - mailbox-native deterministic preflight service"
+requires-python = ">=3.11"
+dependencies = [
+    # Pinned to match the verified isolated starter environment in
+    # technocore-secrets (cryptography 50.0.0) so identity decryption,
+    # signing, and verification behave identically everywhere.
+    "cryptography==50.0.0",
+]
+
+# Virtual project: dependencies are installed into .venv; the code itself
+# always runs from the source tree (no self-install/build step).
+[tool.uv]
+package = false
